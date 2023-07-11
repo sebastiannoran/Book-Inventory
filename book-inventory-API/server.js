@@ -54,6 +54,21 @@ app.post("/books", async (req, res) => {
     }
 });
 
+app.delete("/books/:id", async (req, res) => {
+  const bookId = parseInt (req.params.id, 10);
+  
+  try {
+    const deleteOp = await query (`DELETE FROM book_inventory WHERE id = $1`, [bookId]);
+    if (deleteOp.rowCount > 0) {
+      res.status(200).send({ message: "book deleted successfully "});
+    } else {
+      res.status(404).send({message: "book not found"});
+    }
+
+  } catch (error) {
+    console.log(error)
+  }
+});
 
 
 app.listen(port, () => {
