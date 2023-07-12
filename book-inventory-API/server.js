@@ -70,6 +70,43 @@ app.delete("/books/:id", async (req, res) => {
   }
 });
 
+app.patch("/books/:id", async (req, res) => {
+  const bookId = parseInt(req.params.id, 10);
+
+  const fieldNames = [
+    "title",
+    "author",
+    "pages",
+    "yearPublished",
+    "genre",
+    "status",
+  ].filter((name) => req.body[name]);
+
+  const updatedValues = fieldNames.map((name) => req.body[name]);
+  const setValuesSQL = fieldNames
+    .map((name, i) => {
+      return `${name} = $${i + 1}`;
+    })
+    .join(', ');
+
+  try {
+    const updatedBook = await query(
+      `UPDATE book_inventory SET ${setValuesSQL} WHERE id = $${fieldNames.length + 1} RETURNING *`,
+      [...updatedValues, bookId]
+    );
+
+    if (updatedBook.rows.length > 0) {
+      res.status(200).json(updatedBook.rows[0]);
+    } else {
+      res.status(404).send({ message: "Book not found" });
+    }
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+    console.error(err);
+  }
+});
+
+
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
